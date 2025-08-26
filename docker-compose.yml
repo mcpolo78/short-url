@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: linkshortener-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: linkshortener
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-password}
+      MYSQL_USER: ${DB_USERNAME:-linkuser}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-linkpassword}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - linkshortener-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: linkshortener-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - linkshortener-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: linkshortener-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8082:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: ${DB_USERNAME:-linkuser}
+      PMA_PASSWORD: ${DB_PASSWORD:-linkpassword}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-password}
+    depends_on:
+      - mysql
+    networks:
+      - linkshortener-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: linkshortener-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/linkshortener?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-linkuser}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-linkpassword}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      APP_BASE_URL: http://localhost:8080
+      JWT_SECRET: ${JWT_SECRET:-myDefaultSecretKeyForDevelopmentOnly123456789012345678901234567890}
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - linkshortener-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: linkshortener-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    environment:
+      VITE_API_BASE_URL: http://localhost:8080
+    depends_on:
+      - backend
+    networks:
+      - linkshortener-network
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  linkshortener-network:
+    driver: bridge
