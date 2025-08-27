@@ -1,11 +1,5 @@
-[phases.setup]
-nixPkgs = ["openjdk17"]
-
 [phases.build]
-cmd = "./mvnw clean package -DskipTests"
+cmd = "./mvnw clean package -DskipTests -q"
 
 [phases.start]
 cmd = "java -Dserver.port=$PORT -Dspring.profiles.active=prod -jar target/*.jar"
-
-[variables]
-JAVA_VERSION = "17"
