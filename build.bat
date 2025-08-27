@@ -13,7 +13,7 @@ echo 📦 Cleaning previous builds...
 call mvnw.cmd clean
 
 echo 🔨 Building application...
-call mvnw.cmd package -DskipTests -Dmaven.compiler.target=21 -Dmaven.compiler.source=21
+call mvnw.cmd package -DskipTests -Dmaven.compiler.target=17 -Dmaven.compiler.source=17
 
 if %errorlevel% neq 0 (
     echo ❌ Build failed!

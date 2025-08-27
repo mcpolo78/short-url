@@ -10,7 +10,7 @@ echo "📦 Cleaning previous builds..."
 ./mvnw clean
 
 echo "🔨 Building application..."
-./mvnw package -DskipTests -Dmaven.compiler.target=21 -Dmaven.compiler.source=21
+./mvnw package -DskipTests -Dmaven.compiler.target=17 -Dmaven.compiler.source=17
 
 echo "✅ Build completed successfully!"
 echo "📁 JAR location: backend/target/*.jar"
