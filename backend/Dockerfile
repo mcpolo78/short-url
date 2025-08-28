@@ -1,0 +1,45 @@
+# Build stage
+FROM eclipse-temurin:17-jdk-alpine as build
+
+WORKDIR /app
+
+# Copy Maven files
+COPY pom.xml .
+COPY .mvn .mvn
+COPY mvnw .
+
+# Make mvnw executable
+RUN chmod +x ./mvnw
+
+# Download dependencies
+RUN ./mvnw dependency:go-offline -B
+
+# Copy source code
+COPY src src
+
+# Build the application
+RUN ./mvnw clean package -DskipTests
+
+# Runtime stage
+FROM eclipse-temurin:17-jre-alpine
+
+WORKDIR /app
+
+# Install curl for health checks
+RUN apk add --no-cache curl
+
+# Copy the jar file from build stage
+COPY --from=build /app/target/*.jar app.jar
+
+# Create directory for QR codes
+RUN mkdir -p qr-codes
+
+# Expose port (Railway will override with $PORT)
+EXPOSE ${PORT:-8080}
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:${PORT:-8080}/ || exit 1
+
+# Run the application with Railway-compatible port binding
+ENTRYPOINT ["java", "-Xmx400m", "-Xms200m", "-Dserver.port=${PORT:-8080}", "-Dspring.profiles.active=railway", "-jar", "app.jar"]

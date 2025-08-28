@@ -1,0 +1,8 @@
+[variables]
+NIXPACKS_JDK_VERSION = "17"
+
+[phases.build]
+cmd = "./mvnw clean package -DskipTests -B -q"
+
+[phases.start]
+cmd = "java -Dserver.port=$PORT -Dspring.profiles.active=railway -Xmx300m -Xms150m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -jar target/*.jar"
