@@ -1,5 +1,5 @@
 # Build stage
-FROM openjdk:21-jdk-slim as build
+FROM openjdk:17-jdk-slim as build
 
 WORKDIR /app
 
@@ -7,6 +7,9 @@ WORKDIR /app
 COPY pom.xml .
 COPY .mvn .mvn
 COPY mvnw .
+
+# Make mvnw executable
+RUN chmod +x ./mvnw
 
 # Download dependencies
 RUN ./mvnw dependency:go-offline -B
@@ -18,7 +21,7 @@ COPY src src
 RUN ./mvnw clean package -DskipTests
 
 # Runtime stage
-FROM openjdk:21-jre-slim
+FROM openjdk:17-jre-slim
 
 WORKDIR /app
 
@@ -36,7 +39,7 @@ EXPOSE ${PORT:-8080}
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
-  CMD curl -f http://localhost:${PORT:-8080}/actuator/health || exit 1
+  CMD curl -f http://localhost:${PORT:-8080}/ || exit 1
 
 # Run the application with Railway-compatible port binding
-ENTRYPOINT ["java", "-Dserver.port=${PORT:-8080}", "-Dspring.profiles.active=prod", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Xmx400m", "-Xms200m", "-Dserver.port=${PORT:-8080}", "-Dspring.profiles.active=railway", "-jar", "app.jar"]
