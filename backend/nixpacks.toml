@@ -1,5 +1,8 @@
+[variables]
+NIXPACKS_JDK_VERSION = "17"
+
 [phases.build]
 cmd = "./mvnw clean package -DskipTests -q -Dspring.profiles.active=railway"
 
 [phases.start]
-cmd = "java -Dserver.port=$PORT -Dspring.profiles.active=railway -jar target/*.jar"
+cmd = "java -Dserver.port=$PORT -Dspring.profiles.active=railway -Xmx400m -Xms200m -jar target/*.jar"
